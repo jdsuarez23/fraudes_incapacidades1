@@ -1,0 +1,20 @@
+analisis_exhaustivo_task:
+  description: >
+    Analiza el documento de incapacidad ubicado en la ruta temporal compartida o con los siguientes datos extraídos: {file_path}
+    
+    Debes ejecutar el siguiente workflow obligatoriamente:
+    1. VALIDACIÓN CIE-10/11: Cruza el código diagnóstico hallado contra la duración de incapacidad permitida (Guías Ministerio de Salud Colombia).
+    2. VERIFICACIÓN INSTITUCIONAL: Simula/Realiza la validación del profesional en RETHUS y pertinencia de la IPS o EPS.
+    3. FORENSE DIGITAL: Evalúa metadatos del archivo y patrones visuales buscando capas de edición en zonas críticas (cédula, fechas, sellos).
+    4. INTELIGENCIA WEB: Cruza el formato detectado de la clínica con patrones y plantillas de fraude vendidas en páginas de Facebook o foros.
+    
+    DEBES consolidar la información resolutiva.
+  expected_output: >
+    Un objeto JSON estricto sin comillas backticks markdown, exactamente con esta estructura:
+    {{
+      "puntaje_veracidad": <Número del 0 al 100 indicando confiabilidad>,
+      "hallazgos_medicos": "<Resumen sobre el CIE-10, justificación de días dados y estado del médico en RETHUS>",
+      "analisis_forense": "<Dictamen de manipulación de metadatos, fuentes discordantes o formatos de internet (OSINT)>",
+      "veredicto": "<Una sola palabra: VALIDA, SOSPECHOSA o FRAUDULENTA>"
+    }}
+  agent: perito_forense
