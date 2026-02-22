@@ -13,13 +13,12 @@ except Exception as e:  # pragma: no cover
         "Instala con: pip install PyYAML"
     ) from e
 
-from crewai_tools import OCRTool
-
+from fraude_incapacidades.tools.extraction_tools import extract_document_info_tool
+from fraude_incapacidades.tools.verification_tools import validar_rethus_tool, validar_cie10_tool
 
 def _load_yaml(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
-
 
 # Rutas a los YAML de configuración
 _BASE = Path(__file__).parent / "config"
@@ -29,13 +28,15 @@ _TASKS_YAML = _BASE / "tasks.yaml"
 agents_cfg = _load_yaml(_AGENTS_YAML)
 tasks_cfg = _load_yaml(_TASKS_YAML)
 
-
 def _build_agents(cfg: dict) -> Dict[str, Agent]:
     agents: Dict[str, Agent] = {}
     for name, data in cfg.items():
         tools = []
-        if name == "ocr_agent":
-            tools = [OCRTool()]
+        if name == "perito_forense":
+            tools = [extract_document_info_tool]
+        elif name == "auditor_medico":
+            tools = [validar_rethus_tool, validar_cie10_tool]
+            
         agents[name] = Agent(
             role=data.get("role", ""),
             goal=data.get("goal", ""),
@@ -68,12 +69,14 @@ _tasks = _build_tasks(tasks_cfg, _agents)
 # Orden lógico de ejecución (secuencial)
 crew = Crew(
     agents=[
-        _agents["auditor_medico"],
         _agents["perito_forense"],
+        _agents["auditor_medico"],
         _agents["investigador_redes"],
     ],
     tasks=[
-        _tasks["analisis_exhaustivo_task"],
+        _tasks["extraccion_datos_task"],
+        _tasks["verificacion_institucional_task"],
+        _tasks["dictamen_final_task"],
     ],
     process=Process.sequential,
 )

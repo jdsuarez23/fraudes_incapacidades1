@@ -16,6 +16,11 @@ PyMuPDF = "*"
 fastapi = "*"
 uvicorn = "*"
 python-multipart = "*"
+python-docx = "*"
+exifread = "*"
+PyPDF2 = "*"
+beautifulsoup4 = "*"
+requests = "*"
 
 [build-system]
 requires = ["poetry-core"]

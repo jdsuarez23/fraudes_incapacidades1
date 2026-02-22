@@ -29,8 +29,15 @@ def health_check():
 
 @app.post("/api/v1/analyze")
 async def analyze_document(file: UploadFile = File(...)):
-    if file.content_type not in ["application/pdf", "image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Formato no soportado, ingrese PDF o Imagen")
+    allowed_types = [
+        "application/pdf", 
+        "image/jpeg", 
+        "image/png",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword"
+    ]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Ingrese PDF, Word o Imagen.")
 
     # Cumplimiento Habeas Data: Crear directorio temporal protegido
     temp_dir = tempfile.mkdtemp()
