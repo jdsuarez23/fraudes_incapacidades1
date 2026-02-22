@@ -1,39 +1,41 @@
 extraccion_datos_task:
   description: >
-    Utiliza tus herramientas para leer el documento ubicado en la ruta: {file_path}.
-    Tu único trabajo es extraer la información pura, incluyendo los metadatos ocultos.
-    DEBES identificar explícitamente:
-    1. Nombre de Paciente
-    2. Nombre y Cédula/Registro del Médico
-    3. Código CIE-10 y Días de Incapacidad
-    4. Metadatos de la imagen/pdf (Herramienta de edición usada, Fechas de creación de sistema vs expedición del documento).
+    Utiliza la herramienta 'extract_document_info_tool' para leer el documento ubicado en la ruta: {file_path}.
+    Tu único trabajo es extraer la información puramente objetiva. NO emitas juicios.
+    DEBES extraer e listar estrictamente:
+    1. Nombre Paciente y Cédula
+    2. Nombre del Médico y su Identificación
+    3. Código CIE-10 (Diagnóstico) y Días concedidos
+    4. Metadatos del documento (Ej. Fechas, Software creador como PDFCreator o Adobe).
   expected_output: >
-    Un reporte detallado listando "Nombre Medico: X", "CIE-10: Y", "Metadatos: Z". Sin juicios de valor.
+    Un listado de extracción pura: "Médico: [nombre], CIE-10: [código], Días: [n], Metadatos: [datos]"
   agent: perito_forense
 
 verificacion_institucional_task:
   description: >
-    Toma la información extraída del paso anterior.
-    1. Usa la herramienta de RETHUS para buscar el Nombre del Médico. Si la herramienta retorna que NO EXISTE, anótalo como alerta grave.
-    2. Usa la herramienta del CIE-10 para ver si la cantidad de días otorgados es congruente con la enfermedad detectada (ej. Diarrea 30 días es sospechoso).
+    Toma los datos extraídos por el Perito. DEBES ASUMIR QUE EL DOCUMENTO ES REAL.
+    1. Utiliza 'validar_rethus_tool' con el nombre del médico extraído. Solo anota el resultado, no te alarmes sin motivo.
+    2. Utiliza 'validar_cie10_tool' enviando el código CIE-10 y la cantidad de días. Si no hay código claro, asume validez.
   expected_output: >
-    Un informe de validación estricto diciendo si el Médico está activo en RETHUS y si los días por el código CIE-10 tienen sentido clínico.
+    Un reporte consolidando el resultado de validación RETHUS y el cruce clínico de días aprobados CIE-10.
   agent: auditor_medico
 
 dictamen_final_task:
   description: >
-    Analiza TODA la evidencia (Metadatos extraídos + Resultados de RETHUS + Validaciones Médicas + Formato OSINT).
-    Aplica estas REGLAS ESTRICTAS para el puntaje de veracidad:
-    - Si el médico NO está en RETHUS: El dictamen es FRAUDULENTA automáticamente (Puntaje < 20).
-    - Si el documento tiene metadatos de "Adobe Photoshop", "Illustrator" o fechas de creación muy dispares: Dictamen FRAUDULENTA o SOSPECHOSA (Puntaje < 50).
-    - Si los días de incapacidad no concuerdan con la enfermedad: Dictamen SOSPECHOSA (Puntaje < 60).
-    - Solo si todas las verificaciones salen perfectas, el puntaje es > 90 (VALIDA).
+    Generarás el Veredicto Analizando los 2 pasos anteriores.
+    
+    INSTRUCCIÓN SUPREMA: Eres un sistema con PRESUNCIÓN DE INOCENCIA. Por defecto la incapacidad debe ser tratada como VALIDA (Puntaje 90-100%).
+    
+    SOLO DEBES BAJAR EL PUNTAJE SI ENCUENTRAS PRUEBAS IRREFUTABLES:
+    - REGLA 1 (Edición): Si los Metadatos confirman uso explícito de "Adobe Photoshop", "Illustrator" o si la herramienta señala "ADVERTENCIA", marca como FRAUDULENTA (<30%).
+    - REGLA 2 (Exageración): Si la herramienta CIE-10 lanza "ALERTA CLÍNICA" por días inflados escandalosamente, marca como SOSPECHOSA (60%).
+    - REGLA 3 (Mínimas Dudas): Si RETHUS dice "VERIFICACIÓN EXITOSA", el puntaje MÍNIMO debe ser 85%, NUNCA MENOS, incluso si hay pequeñeces raras en el diseño o texto faltante.
   expected_output: >
     Un objeto JSON estricto sin comillas backticks markdown, exactamente con esta estructura:
     {{
       "puntaje_veracidad": <Número del 0 al 100 indicando confiabilidad>,
-      "hallazgos_medicos": "<Resumen detallado de la validación del médico en RETHUS y pertinencia de días CIE-10>",
-      "analisis_forense": "<Dictamen profundo de los metadatos del PDF o EXIF de la imagen>",
-      "veredicto": "<Una sola palabra: VALIDA, SOSPECHOSA o FRAUDULENTA>"
+      "hallazgos_medicos": "<Resumen detallado del CIE-10 y RETHUS>",
+      "analisis_forense": "<Qué detectaron los metadatos o OCR>",
+      "veredicto": "<VALIDA, SOSPECHOSA, o FRAUDULENTA>"
     }}
   agent: investigador_redes
